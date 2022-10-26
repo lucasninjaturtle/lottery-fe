@@ -1,8 +1,55 @@
+import React from 'react';
+import { ConnectButton } from '@rainbow-me/rainbowkit'
 import Head from 'next/head'
-import Image from 'next/image'
 import styles from '../styles/Home.module.css'
+import { ethers } from "ethers";
+import { abi } from '../helpers/lottery';
+
+
 
 export default function Home() {
+
+  const [normalBalance, setNormalBalance] = React.useState(0)
+  const [yourWallet, setYourWallet] = React.useState('')
+
+  const getConnection = async ()=>{
+
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+
+let accounts = await provider.send("eth_requestAccounts", []);
+    let account = accounts[0];
+    // provider.on('accountsChanged', function (accounts) {
+    //     account = accounts[0];
+    //     console.log(address); // Print new address
+    // });
+
+    const signer = provider.getSigner();
+
+    const address = await signer.getAddress();
+
+const balance = await provider.getBalance(address)
+const balanceNormal = await ethers.utils.formatEther(balance)
+
+// console.log(myAccount)
+
+setNormalBalance(balanceNormal)
+
+//CONTRACT
+
+const myContract = new ethers.Contract('0xef8ac5Fe65d0BB2c9b53eF360f26150fD4B6fB7D', abi, provider);
+
+console.log(myContract)
+
+
+  }
+  getConnection()
+
+  //const eth = ethers.utils.getAccountPath
+
+  
+
+
+
   return (
     <div className={styles.container}>
       <Head>
@@ -12,60 +59,16 @@ export default function Home() {
       </Head>
 
       <main className={styles.main}>
+        <ConnectButton/>
         <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
+         Balance:  {normalBalance}
+
         </h1>
 
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
-        </p>
-
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h2>Documentation &rarr;</h2>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h2>Learn &rarr;</h2>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/canary/examples"
-            className={styles.card}
-          >
-            <h2>Examples &rarr;</h2>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.card}
-          >
-            <h2>Deploy &rarr;</h2>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
+        
       </main>
 
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <span className={styles.logo}>
-            <Image src="/vercel.svg" alt="Vercel Logo" width={72} height={16} />
-          </span>
-        </a>
-      </footer>
+     
     </div>
   )
 }
