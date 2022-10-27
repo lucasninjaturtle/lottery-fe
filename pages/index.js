@@ -13,6 +13,10 @@ export default function Home() {
   const [yourWallet, setYourWallet] = React.useState('')
   const [manager, setManager] = React.useState('')
   const [peopleOnLottery, setPeopleOnLottery] = React.useState(0)
+  const [contract, setContract] = React.useState('')
+const [signer, setSigner] = React.useState('')
+
+
   var provider;
 
   const getConnection = async ()=>{
@@ -23,16 +27,18 @@ export default function Home() {
 
     
 
-let accounts = await provider.send("eth_requestAccounts", []);
+let accounts = await provider?.send("eth_requestAccounts", []);
     let account = accounts[0];
     // provider.on('accountsChanged', function (accounts) {
     //     account = accounts[0];
     //     console.log(address); // Print new address
     // });
 
-    const signer = provider.getSigner();
+    const signerVar = provider.getSigner();
+    setSigner(signerVar)
 
     const address = await signer.getAddress();
+    setYourWallet(address)
 
 const balance = await provider.getBalance(address)
 const balanceNormal = await ethers.utils.formatEther(balance)
@@ -48,6 +54,10 @@ const contractHash = '0xef8ac5Fe65d0BB2c9b53eF360f26150fD4B6fB7D'
 //const contractHash = '0x2224124f42C2363555F6Bc594CD7451381778543'
 
 const myContract = new ethers.Contract(contractHash, abi, provider);
+setContract(myContract)
+
+//CONNECTING CONTRACT TO BE ABBLE TO SIGN
+const daiWithSigner = contract.connect(signer);
 
 //MANAGER
 var managerVar = await myContract.callStatic.manager()
@@ -59,6 +69,7 @@ setPeopleOnLottery(peopleOnLotteryVar.length)
 //console.log(peopleOnLottey.length)
 
 
+
   }
   getConnection()
 
@@ -68,13 +79,12 @@ setPeopleOnLottery(peopleOnLotteryVar.length)
 //FORM
 
 const [ form, setForm ] = React.useState({
-  email: 'test6@test.com',
-  password: '123456',
-  name: 'Susana Paz'
+  quantity: '0.01',
 });
 
 const onChange = ({ target }) => {
   const { name, value } = target;
+  console.log(target.value)
   setForm({
       ...form,
       [name]: value
@@ -83,7 +93,44 @@ const onChange = ({ target }) => {
 
 const onSubmit = async(ev) => {
   ev.preventDefault();
+
+  // contract.enter().send({
+  //   from: signer,
+  //   value: ethers.utils.parseEther(form.quantity)
+  //   //form.quantity
+  // })
   
+  const LotteryWithSigner = contract.connect(signer);
+
+  // LotteryWithSigner.enter({
+  //     from: signer,
+  //   value: ethers.utils.parseEther(form.quantity)
+  // })
+  var valueString = ethers.utils.parseUnits(form.quantity)
+  
+  await LotteryWithSigner.enter({
+    from: yourWallet,
+    value: valueString,
+    gasLimit: 50000,
+  });
+  
+
+
+  
+  //yourWallet
+  
+}
+
+
+
+
+
+
+//CHECK TOTAL QUANTITY VALUE
+const todoOk = () => {
+  return ( 
+      form.quantity > 0.0001 
+  ) ? true : false;
 }
 
 
@@ -110,11 +157,33 @@ const onSubmit = async(ev) => {
 
         </h1>
        
-        <h2>Quantity</h2> 
+       <form
+       onSubmit={ onSubmit }
+       >
+
+       <h2>Quantity</h2> 
         
-        <input></input>
+        <input
+                    className="input100"
+                    type="number"
+                    name="quantity"
+                    placeholder="ETH quantity" 
+                    value={form.quantity}
+                    onChange={ onChange }
+                />
         <br/>
-        <button>ENTER LOTTERY</button>
+        <button
+                    type="submit"
+                    className="login100-form-btn"
+                    disabled={ !todoOk() }
+                >
+                    ENTER LOTTERY
+                </button>
+
+
+
+       </form>
+       
         
       </main>
 
