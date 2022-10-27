@@ -11,10 +11,17 @@ export default function Home() {
 
   const [normalBalance, setNormalBalance] = React.useState(0)
   const [yourWallet, setYourWallet] = React.useState('')
+  const [manager, setManager] = React.useState('')
+  const [peopleOnLottery, setPeopleOnLottery] = React.useState(0)
+  var provider;
 
   const getConnection = async ()=>{
 
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    if (typeof window !== "undefined") {
+      provider = new ethers.providers.Web3Provider(window.ethereum)
+    }
+
+    
 
 let accounts = await provider.send("eth_requestAccounts", []);
     let account = accounts[0];
@@ -36,9 +43,20 @@ setNormalBalance(balanceNormal)
 
 //CONTRACT
 
-const myContract = new ethers.Contract('0xef8ac5Fe65d0BB2c9b53eF360f26150fD4B6fB7D', abi, provider);
+const contractHash = '0xef8ac5Fe65d0BB2c9b53eF360f26150fD4B6fB7D'
 
-console.log(myContract)
+//const contractHash = '0x2224124f42C2363555F6Bc594CD7451381778543'
+
+const myContract = new ethers.Contract(contractHash, abi, provider);
+
+//MANAGER
+var managerVar = await myContract.callStatic.manager()
+setManager(managerVar)
+
+//PEOPLE ON LOTTERY
+var peopleOnLotteryVar = await myContract.getPlayers()
+setPeopleOnLottery(peopleOnLotteryVar.length)
+//console.log(peopleOnLottey.length)
 
 
   }
@@ -47,7 +65,26 @@ console.log(myContract)
   //const eth = ethers.utils.getAccountPath
 
   
+//FORM
 
+const [ form, setForm ] = React.useState({
+  email: 'test6@test.com',
+  password: '123456',
+  name: 'Susana Paz'
+});
+
+const onChange = ({ target }) => {
+  const { name, value } = target;
+  setForm({
+      ...form,
+      [name]: value
+  });
+}
+
+const onSubmit = async(ev) => {
+  ev.preventDefault();
+  
+}
 
 
   return (
@@ -60,13 +97,28 @@ console.log(myContract)
 
       <main className={styles.main}>
         <ConnectButton/>
-        <h1 className={styles.title}>
+        <h1 className={styles.description}>
          Balance:  {normalBalance}
 
-        </h1>
+        <br/>
+        Lottery contract:
 
+        <br/>
+        Lottery manager: {manager}
+        <br/>
+        People on Lottery: {peopleOnLottery}
+
+        </h1>
+       
+        <h2>Quantity</h2> 
+        
+        <input></input>
+        <br/>
+        <button>ENTER LOTTERY</button>
         
       </main>
+
+      
 
      
     </div>
