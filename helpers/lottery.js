@@ -10,13 +10,16 @@ const SmatContractAdress3 = '0xef8ac5Fe65d0BB2c9b53eF360f26150fD4B6fB7D'
         outputs: [],
         stateMutability: "payable",
         type: "function"
+        
       },
       {
         inputs: [],
         name: "enter",
         outputs: [],
         stateMutability: "payable",
-        type: "function"
+        type: "function",
+        payable: true,
+        gas: 29000000
       },
       {
         inputs: [],

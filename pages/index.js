@@ -5,6 +5,18 @@ import styles from '../styles/Home.module.css'
 import { ethers } from "ethers";
 import { abi } from '../helpers/lottery';
 
+//WAGMI
+import {
+  useAccount,
+  useConnect,
+  useDisconnect,
+  useEnsAvatar,
+  useEnsName,
+  usePrepareContractWrite,
+  useContractWrite,
+  useWaitForTransaction,
+} from 'wagmi'
+
 
 
 export default function Home() {
@@ -13,125 +25,144 @@ export default function Home() {
   const [yourWallet, setYourWallet] = React.useState('')
   const [manager, setManager] = React.useState('')
   const [peopleOnLottery, setPeopleOnLottery] = React.useState(0)
-  const [contract, setContract] = React.useState('')
-const [signer, setSigner] = React.useState('')
+  //const [contract, setContract] = React.useState('')
+  const [signer, setSigner] = React.useState('')
+
+
+  const { address, connector, isConnected } = useAccount()
+  const { data: ensAvatar } = useEnsAvatar({ addressOrName: address })
 
 
   var provider;
 
-  const getConnection = async ()=>{
-
-    if (typeof window !== "undefined") {
-      provider = new ethers.providers.Web3Provider(window.ethereum)
-    }
+  const getConnection = async () => {
 
     
+    provider = await new ethers.providers.Web3Provider(window.ethereum)
 
-let accounts = await provider?.send("eth_requestAccounts", []);
-    let account = accounts[0];
-    // provider.on('accountsChanged', function (accounts) {
-    //     account = accounts[0];
-    //     console.log(address); // Print new address
-    // });
+    var log = await provider?.getBalance(address)
 
-    const signerVar = provider.getSigner();
-    setSigner(signerVar)
+   
+    const signerVar = await provider.getSigner();
+      //setSigner(signerVar)
 
-    const address = await signer.getAddress();
-    setYourWallet(address)
 
-const balance = await provider.getBalance(address)
-const balanceNormal = await ethers.utils.formatEther(balance)
+      
+      //GET CONTRACT
+      const myContract = await new ethers.Contract(contractHash, abi, provider);
+      /////////////////////////////////
 
-// console.log(myAccount)
+      //GET MANAGER
+      var managerVar = await myContract.callStatic.manager()
+      setManager(managerVar)
+      console.log(manager)
 
-setNormalBalance(balanceNormal)
+      //////////////////////
 
-//CONTRACT
+      //PEOPLE ON LOTTERY
+      var peopleOnLotteryVar = await myContract.getPlayers()
+      setPeopleOnLottery(peopleOnLotteryVar.length)
+      //console.log(peopleOnLottery.length)
 
-const contractHash = '0xef8ac5Fe65d0BB2c9b53eF360f26150fD4B6fB7D'
+      var correr = false
 
-//const contractHash = '0x2224124f42C2363555F6Bc594CD7451381778543'
+    if (correr) {
 
-const myContract = new ethers.Contract(contractHash, abi, provider);
-setContract(myContract)
+      // const address = await signer.getAddress;
+      // setYourWallet(address)
 
-//CONNECTING CONTRACT TO BE ABBLE TO SIGN
-const daiWithSigner = contract.connect(signer);
 
-//MANAGER
-var managerVar = await myContract.callStatic.manager()
-setManager(managerVar)
 
-//PEOPLE ON LOTTERY
-var peopleOnLotteryVar = await myContract.getPlayers()
-setPeopleOnLottery(peopleOnLotteryVar.length)
-//console.log(peopleOnLottey.length)
+      // provider.on('accountsChanged', function (accounts) {
+      //     account = accounts[0];
+      //     console.log(address); // Print new address
+      // });
+
+
+
+      const balance = await provider.getBalance(address)
+      const balanceNormal = await ethers.utils.formatEther(balance)
+
+      // console.log(myAccount)
+
+      setNormalBalance(balanceNormal)
+
+      //CONTRACT
+
+      
+
+
+    }
+
 
 
 
   }
-  getConnection()
 
-  //const eth = ethers.utils.getAccountPath
+  if (typeof window !== "undefined") {
+    getConnection()
+    
+  }
 
-  
-//FORM
 
-const [ form, setForm ] = React.useState({
-  quantity: '0.01',
-});
+  //FORM
 
-const onChange = ({ target }) => {
-  const { name, value } = target;
-  console.log(target.value)
-  setForm({
+  const [form, setForm] = React.useState({
+    quantity: '0.001',
+  });
+
+  const onChange = ({ target }) => {
+    const { name, value } = target;
+    console.log(target.value)
+    setForm({
       ...form,
       [name]: value
-  });
-}
+    });
+  }
 
-const onSubmit = async(ev) => {
-  ev.preventDefault();
+  ///////////////////////////////////
 
-  // contract.enter().send({
-  //   from: signer,
-  //   value: ethers.utils.parseEther(form.quantity)
-  //   //form.quantity
-  // })
-  
-  const LotteryWithSigner = contract.connect(signer);
+  //WAGMI TRANSACTION
 
-  // LotteryWithSigner.enter({
-  //     from: signer,
-  //   value: ethers.utils.parseEther(form.quantity)
-  // })
-  var valueString = ethers.utils.parseUnits(form.quantity)
-  
-  await LotteryWithSigner.enter({
-    from: yourWallet,
-    value: valueString,
-    gasLimit: 50000,
-  });
-  
+  //const contractHash = '0xef8ac5Fe65d0BB2c9b53eF360f26150fD4B6fB7D'
 
+  // CONTRACT 5 (ultimo)
 
-  
-  //yourWallet
-  
-}
+  const contractHash = '0x291618128C6C4fc4013d3094Af5Be80824551629'
+
+  ///////////////////////////////////////////////////
+
+  const onSubmit = async (ev) => {
+    ev.preventDefault();
+
+    const submitContract = await new ethers.Contract(contractHash, abi, provider);
+
+    const signerVar = await provider.getSigner();
+
+    const LotteryWithSigner = submitContract.connect(signerVar);
+
+    console.log(LotteryWithSigner)
+
+    var valueString = await ethers.utils.parseUnits(form.quantity)
 
 
 
+    await LotteryWithSigner.enter({
+      from: yourWallet,
+      value: valueString,
+      gasLimit: 50000,
+      gasPrice: 210000,
+      nonce: 1
+    });
 
+  }
 
-
-//CHECK TOTAL QUANTITY VALUE
-const todoOk = () => {
-  return ( 
-      form.quantity > 0.0001 
-  ) ? true : false;
-}
+  //CHECK TOTAL QUANTITY VALUE
+  const todoOk = () => {
+    return (
+      form.quantity > 0.0001
+    ) ? true : false;
+  }
 
 
   return (
@@ -143,53 +174,59 @@ const todoOk = () => {
       </Head>
 
       <main className={styles.main}>
-        <ConnectButton/>
+        <ConnectButton />
         <h1 className={styles.description}>
-         Balance:  {normalBalance}
+          Balance:  {normalBalance}
 
-        <br/>
-        Lottery contract:
+          <br />
+          Lottery contract: {contractHash}
 
-        <br/>
-        Lottery manager: {manager}
-        <br/>
-        People on Lottery: {peopleOnLottery}
+          <br />
+          <br />
+          Wallet: {address}
+
+          <br />
+          Lottery manager: {manager}
+          <br />
+          People on Lottery: {peopleOnLottery}
 
         </h1>
-       
-       <form
-       onSubmit={ onSubmit }
-       >
 
-       <h2>Quantity</h2> 
-        
-        <input
-                    className="input100"
-                    type="number"
-                    name="quantity"
-                    placeholder="ETH quantity" 
-                    value={form.quantity}
-                    onChange={ onChange }
-                />
-        <br/>
-        <button
-                    type="submit"
-                    className="login100-form-btn"
-                    disabled={ !todoOk() }
-                >
-                    ENTER LOTTERY
-                </button>
+        <form
+          onSubmit={onSubmit}
+        >
+
+          <h2>Quantity</h2>
+
+          <input
+            className="input100"
+            type="number"
+            name="quantity"
+            placeholder="ETH quantity"
+            value={form.quantity}
+            onChange={onChange}
+          />
+          <br />
+          <button
+            type="submit"
+            className="login100-form-btn"
+            disabled={!todoOk()}
+          >
+            ENTER LOTTERY
+          </button>
 
 
 
-       </form>
-       
-        
+        </form>
+
+        {/* <EnterLottery/> */}
+
+
       </main>
 
-      
 
-     
+
+
     </div>
   )
 }
