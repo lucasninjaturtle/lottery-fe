@@ -64,7 +64,7 @@ export default function Home() {
       setPeopleOnLottery(peopleOnLotteryVar.length)
       //console.log(peopleOnLottery.length)
 
-      var correr = false
+    var correr = false
 
     if (correr) {
 
@@ -146,14 +146,16 @@ export default function Home() {
     var valueString = await ethers.utils.parseUnits(form.quantity)
 
 
-
+    //IS Wtritting ok on blockahain BUT gas is not enough??  https://goerli.etherscan.io/address/0x291618128c6c4fc4013d3094af5be80824551629
     await LotteryWithSigner.enter({
       from: yourWallet,
       value: valueString,
-      gasLimit: 50000,
-      gasPrice: 210000,
+      gasLimit: 11000000,
+      //gasPrice: 59000000,
       nonce: 1
     });
+
+
 
   }
 
